@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#2f4a3a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Dieta">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Dieta · Diana & Enzo</title>
+<style>
+  :root {
+    --bg: #f6f4ee; --card: #ffffff; --ink: #1d1d1b; --muted: #6b675f;
+    --brand: #2f4a3a; --brand-2: #e9e5da; --hl: #fde9b8; --hl-line: #d9b75a;
+    --radius: 14px;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
+  body { display: flex; flex-direction: column; }
+
+  header { background: var(--brand); color: #fff; padding: calc(env(safe-area-inset-top) + 10px) 14px 10px; }
+  .top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  h1 { font-size: 18px; margin: 0; font-weight: 700; letter-spacing: .2px; }
+  .who { display: flex; background: rgba(255,255,255,.14); border-radius: 999px; padding: 3px; }
+  .who button { border: 0; background: transparent; color: #fff; font: inherit; font-weight: 600;
+    padding: 7px 16px; border-radius: 999px; font-size: 15px; }
+  .who button.on { background: #fff; color: var(--brand); }
+
+  nav.days { display: flex; gap: 6px; padding: 10px 12px 2px; overflow-x: auto; scrollbar-width: none; }
+  nav.days::-webkit-scrollbar { display: none; }
+  nav.days button { flex: 1 0 auto; min-width: 44px; border: 0; border-radius: 10px; padding: 8px 6px;
+    background: rgba(255,255,255,.12); color: #fff; font: inherit; font-size: 13px; font-weight: 600; position: relative; }
+  nav.days button.on { background: #fff; color: var(--brand); }
+  nav.days button.today::after { content: ""; position: absolute; left: 50%; bottom: 3px; width: 5px; height: 5px;
+    margin-left: -2.5px; border-radius: 50%; background: var(--hl-line); }
+
+  main { flex: 1; display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; overscroll-behavior-x: contain; }
+  main::-webkit-scrollbar { display: none; }
+  section.day { flex: 0 0 100%; scroll-snap-align: start; overflow-y: auto; padding: 14px 14px calc(env(safe-area-inset-bottom) + 24px); }
+  .dayname { font-size: 24px; font-weight: 800; margin: 2px 2px 12px; display: flex; align-items: baseline; gap: 8px; }
+  .dayname small { font-size: 13px; font-weight: 600; color: var(--brand); background: var(--brand-2); padding: 2px 8px; border-radius: 999px; }
+
+  .meal { background: var(--card); border-radius: var(--radius); padding: 12px 14px; margin-bottom: 12px;
+    box-shadow: 0 1px 2px rgba(0,0,0,.06); }
+  .meal h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .08em; color: var(--brand); margin: 0 0 8px; display: flex; justify-content: space-between; align-items: baseline; }
+  .meal h2 span { text-transform: none; letter-spacing: 0; color: var(--muted); font-weight: 500; font-size: 12px; }
+  ul { list-style: none; margin: 0; padding: 0; }
+  li { display: flex; justify-content: space-between; gap: 12px; padding: 7px 0; border-top: 1px solid #efece4; font-size: 16px; }
+  li:first-child { border-top: 0; }
+  li .q { color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+  li .k { display: block; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 1px; }
+  li.sh .n { background: var(--hl); box-shadow: 0 0 0 2px var(--hl); border-radius: 3px; }
+  .tip { margin-top: 8px; font-size: 13px; color: var(--brand); background: #eef3ef; border-radius: 9px; padding: 7px 10px; }
+  .tip b { font-weight: 700; }
+  .oil { font-size: 14px; color: var(--muted); text-align: center; margin: 4px 0 12px; }
+  .legend { font-size: 12px; color: var(--muted); text-align: center; }
+  .legend i { display: inline-block; width: 14px; height: 10px; background: var(--hl); border: 1px solid var(--hl-line); border-radius: 2px; vertical-align: -1px; }
+  details.rules { background: var(--card); border-radius: var(--radius); padding: 10px 14px; margin-top: 8px; font-size: 14px; color: #3b3934; }
+  details.rules summary { font-weight: 700; color: var(--brand); cursor: pointer; }
+  details.rules li { display: list-item; font-size: 14px; border: 0; padding: 3px 0; margin-left: 18px; }
+  details.rules ul { list-style: disc; }
+</style>
+</head>
+<body>
+<header>
+  <div class="top">
+    <h1>La mia dieta</h1>
+    <div class="who" role="tablist">
+      <button data-p="D">Diana</button>
+      <button data-p="E">Enzo</button>
+    </div>
+  </div>
+  <nav class="days" id="days"></nav>
+</header>
+<main id="pager"></main>
+
+<script>
+// Piatti: [nome, quantità, tipo, insieme?]. "insieme" = si cucina una volta per tutti e due.
+const DAYS = ["Lunedì","Martedì","Mercoledì","Giovedì","Venerdì","Sabato","Domenica"];
+const SHORT = ["Lun","Mar","Mer","Gio","Ven","Sab","Dom"];
+
+const BREAKFAST = {
+  D: [["The o orzo solubile","a volontà"],["Yogurt magro","150 g"],["All-Bran","30 g"],["Caffè dolcificato con fruttosio o miele","a volontà"]],
+  E: [["Yogurt magro","125 g"],["Fette biscottate con miele","3"],["Caffè o the dolcificato con fruttosio","a volontà"]]
+};
+const SNACK = [["Frutta fresca","200 g"]];
+const OIL = { D: "20 g (2 cucchiai)", E: "26 g (3 cucchiai)" };
+
+// Per ogni giorno: pranzo e cena, con nota "insieme" e i piatti di ciascuno
+const WEEK = [
+ { L: { tip: "Una pentola di pasta (stesso formato) e la spigola in un'unica teglia.",
+        D: [["Primo","Maccheroni con olio e parmigiano","50 g",1],["Secondo","Spigola al forno","100 g",1],["Contorno","Lattuga","200 g"],["Frutta","Arance","200 g"]],
+        E: [["Primo","Spaghetti con zucchine","60 g",1],["Secondo","Spigola al forno","120 g",1],["Contorno","Bieta","200 g"],["Frutta","Pere","200 g"]] },
+   C: { tip: "Niente secondo da cucinare: solo i due contorni.",
+        D: [["Secondo","Ricotta","70 g"],["Contorno","Broccoletti o cicoria","200 g"],["Frutta","Mele","200 g"],["Pane","Pane integrale","70 g"]],
+        E: [["Secondo","Certosino","60 g"],["Contorno","Carote cotte o zucca","200 g"],["Frutta","Pere","250 g"],["Pane","Pane integrale","75 g"]] } },
+ { L: { tip: "Tutte le zucchine grigliate insieme (circa 330 g); polpette e pollo nello stesso forno.",
+        D: [["Primo","Zucchine","100 g",1],["Secondo","Polpette di vitello","100 g"],["Contorno","Scarola o bietola","200 g"],["Frutta","Pere","200 g"]],
+        E: [["Primo","Pasta in bianco con olio","60 g"],["Secondo","Coscia di pollo","100 g"],["Contorno","Zucchine grigliate","230 g",1],["Frutta","Pere","200 g"]] },
+   C: { tip: "Si cuociono solo le zucchine di Enzo.",
+        D: [["Secondo","Bresaola","60 g"],["Contorno","Carote crude","180 g"],["Frutta","Mele","200 g"],["Pane","Pane integrale","70 g"]],
+        E: [["Secondo","Prosciutto cotto","60 g"],["Contorno","Zucchine","200 g"],["Frutta","Mele","200 g"],["Pane","Rosetta bianca","70 g"]] } },
+ { L: { tip: "Un solo minestrone senza legumi per tutti e due; sogliole cotte insieme.",
+        D: [["Primo","Minestrone senza legumi","150 g",1],["Secondo","Sogliola al vapore","100 g",1],["Contorno","Lattuga","150 g"],["Frutta","Pere","200 g"]],
+        E: [["Primo","Minestrone","120 g",1],["Secondo","Sogliola","100 g",1],["Contorno","Fagiolini","200 g"],["Frutta","Pere","250 g"],["Pane","Pane casereccio","40 g"]] },
+   C: { tip: "Philadelphia per tutti e due.",
+        D: [["Secondo","Philadelphia light","70 g",1],["Contorno","Spinaci o bietola","200 g"],["Frutta","Mele","200 g"],["Pane","Pane integrale","70 g"]],
+        E: [["Secondo","Philadelphia","60 g",1],["Contorno","Zucca","200 g"],["Frutta","Mele","200 g"],["Pane","Pane casereccio","70 g"]] } },
+ { L: { tip: "Una pentola di pasta e un solo sugo; vitello sulla stessa piastra (fettina per Diana, macinato per Enzo).",
+        D: [["Primo","Spaghetti al pomodoro","50 g",1],["Secondo","Vitello arrosto","100 g",1],["Contorno","Scarola","200 g"],["Frutta","Kiwi","200 g"]],
+        E: [["Primo","Pasta al pomodoro","60 g",1],["Secondo","Hamburger di vitello","100 g",1],["Contorno","Lattuga","150 g"],["Frutta","Pere","200 g"]] },
+   C: { tip: "Nessun piatto in comune stasera.",
+        D: [["Secondo","2 uova alla coque",""],["Contorno","Rucola","100 g"],["Frutta","Pere","200 g"],["Pane","Pane integrale","70 g"]],
+        E: [["Secondo","Spezzatino di vitello","100 g"],["Contorno","Fagiolini","200 g"],["Frutta","Pere","200 g"],["Pane","Pane casereccio","70 g"]] } },
+ { L: { tip: "Calamari e zucchine in un'unica padella; cambiano solo i legumi.",
+        D: [["Primo","Lenticchie secche","50 g"],["Secondo","Calamari","100 g",1],["Contorno","Zucchine","200 g",1],["Frutta","Mele","200 g"]],
+        E: [["Primo","Piselli","150 g"],["Secondo","Calamari","150 g",1],["Contorno","Zucchine","180 g",1],["Frutta","Mele","200 g"],["Pane","Pane casereccio","40 g"]] },
+   C: { tip: "Scarola cotta tutta insieme (circa 450 g).",
+        D: [["Secondo","Manzo magro","100 g"],["Contorno","Scarola","200 g",1],["Frutta","Pere","200 g"],["Pane","Pane integrale","70 g"]],
+        E: [["Secondo","Pollo o tacchino arrosto","100 g"],["Contorno","Scarola","250 g",1],["Frutta","Mele","200 g"],["Pane","Rosetta bianca","70 g"]] } },
+ { L: { tip: "Riso cotto nello stesso brodo: Diana in brodo, Enzo scolato e in insalata.",
+        D: [["Primo","Riso in brodo vegetale","40 g",1],["Secondo","Maiale magro","100 g"],["Contorno","Lattuga","150 g"],["Frutta","Mele","200 g"]],
+        E: [["Primo","Insalata di riso (senza pomodori né sottaceti)","60 g",1],["Secondo","Hamburger di soia","100 g"],["Contorno","Zucchine","200 g"],["Frutta","Pere","200 g"]] },
+   C: { tip: "La fesa è il petto del tacchino: un solo pezzo, cotto insieme.",
+        D: [["Secondo","Petto di tacchino","100 g",1],["Contorno","Zucchine grigliate","200 g"],["Frutta","Pere","200 g"],["Pane","Pane integrale","70 g"]],
+        E: [["Secondo","Fesa di tacchino","70 g",1],["Contorno","Finocchi","200 g"],["Frutta","Mele","200 g"],["Pane","Pane integrale","75 g"]] } },
+ { L: { tip: "Una pentola di pasta, poi due condimenti diversi.",
+        D: [["Primo","Pasta al pomodoro","50 g",1],["Secondo","Manzo magro","100 g"],["Contorno","Zucchine grigliate","170 g"],["Frutta","Pere","200 g"]],
+        E: [["Primo","Pasta con olio e salvia","60 g",1],["Secondo","Petto di pollo","100 g"],["Contorno","Lattuga","170 g"],["Frutta","Pere","200 g"]] },
+   C: { tip: "Platessa cotta insieme, nella stessa teglia.",
+        D: [["Secondo","Platessa","120 g",1],["Contorno","Zucca o carote crude","200 g"],["Frutta","Mele","200 g"],["Pane","Pane integrale","70 g"]],
+        E: [["Secondo","Filetto di platessa","100 g",1],["Contorno","Fagiolini","250 g"],["Frutta","Pere","200 g"],["Pane","Rosetta bianca","70 g"]] } },
+];
+
+const RULES = [
+  "I pesi sono della parte edibile; se l'alimento perde acqua in cottura si pesa cotto.",
+  "Cotture libere, niente fritture. L'olio va aggiunto crudo a fine cottura.",
+  "Aromi, aceto, limone, caffè, tè e infusi (con dolcificante, miele o fruttosio) sono liberi.",
+  "Pranzo e cena si possono invertire.",
+  "Cenare non troppo tardi, almeno 2 ore prima di dormire.",
+  "Almeno 1,5 litri d'acqua al giorno; evitare bibite gassate, dadi e salse pronte.",
+  "Almeno 40 minuti di attività fisica al giorno (anche camminata veloce).",
+];
+
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+function simpleList(items) {
+  return "<ul>" + items.map(([n,q]) => `<li><span class="n">${esc(n)}</span><span class="q">${esc(q)}</span></li>`).join("") + "</ul>";
+}
+function mealList(items) {
+  return "<ul>" + items.map(([k,n,q,sh]) =>
+    `<li class="${sh ? "sh" : ""}"><span><span class="k">${esc(k)}</span><span class="n">${esc(n)}</span></span><span class="q">${esc(q)}</span></li>`
+  ).join("") + "</ul>";
+}
+
+const todayIdx = (new Date().getDay() + 6) % 7;
+let person = (() => { try { return localStorage.getItem("person") || "D"; } catch { return "D"; } })();
+let current = todayIdx;
+
+const pager = document.getElementById("pager");
+const nav = document.getElementById("days");
+
+function render() {
+  document.querySelectorAll(".who button").forEach(b => b.classList.toggle("on", b.dataset.p === person));
+  nav.innerHTML = SHORT.map((s,i) =>
+    `<button data-i="${i}" class="${i===current?"on":""} ${i===todayIdx?"today":""}">${s}</button>`).join("");
+  pager.innerHTML = WEEK.map((d,i) => `
+    <section class="day" aria-label="${DAYS[i]}">
+      <div class="dayname">${DAYS[i]}${i===todayIdx ? "<small>oggi</small>" : ""}</div>
+      <div class="meal"><h2>Colazione</h2>${simpleList(BREAKFAST[person])}</div>
+      <div class="meal"><h2>Spuntino</h2>${simpleList(SNACK)}</div>
+      <div class="meal"><h2>Pranzo</h2>${mealList(d.L[person])}<div class="tip"><b>Insieme:</b> ${esc(d.L.tip)}</div></div>
+      <div class="meal"><h2>Cena</h2>${mealList(d.C[person])}<div class="tip"><b>Insieme:</b> ${esc(d.C.tip)}</div></div>
+      <div class="oil">Olio di oliva nella giornata: <b>${OIL[person]}</b></div>
+      <div class="legend"><i></i> si cucina insieme per tutti e due</div>
+      <details class="rules"><summary>Consigli della nutrizionista</summary><ul>${RULES.map(r=>`<li>${esc(r)}</li>`).join("")}</ul></details>
+    </section>`).join("");
+  goTo(current, false);
+}
+
+function goTo(i, smooth = true) {
+  current = i;
+  pager.scrollTo({ left: i * pager.clientWidth, behavior: smooth ? "smooth" : "auto" });
+  markNav();
+}
+function markNav() {
+  nav.querySelectorAll("button").forEach((b,i) => b.classList.toggle("on", i === current));
+  const on = nav.children[current];
+  if (on) on.scrollIntoView({ inline: "nearest", block: "nearest" });
+}
+
+let t;
+pager.addEventListener("scroll", () => {
+  clearTimeout(t);
+  t = setTimeout(() => {
+    const i = Math.round(pager.scrollLeft / pager.clientWidth);
+    if (i !== current) { current = i; markNav(); }
+  }, 60);
+});
+nav.addEventListener("click", e => { const b = e.target.closest("button"); if (b) goTo(+b.dataset.i); });
+document.querySelectorAll(".who button").forEach(b => b.addEventListener("click", () => {
+  person = b.dataset.p;
+  try { localStorage.setItem("person", person); } catch {}
+  const y = pager.children[current]?.scrollTop || 0;
+  render();
+  if (pager.children[current]) pager.children[current].scrollTop = y;
+}));
+window.addEventListener("resize", () => goTo(current, false));
+
+render();
+
+if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
+</script>
+</body>
+</html>
