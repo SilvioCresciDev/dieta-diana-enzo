@@ -27,7 +27,7 @@
   h1 { font-size: 18px; margin: 0; font-weight: 700; letter-spacing: .2px; }
   .who { display: flex; background: rgba(255,255,255,.14); border-radius: 999px; padding: 3px; }
   .who button { border: 0; background: transparent; color: #fff; font: inherit; font-weight: 600;
-    padding: 7px 16px; border-radius: 999px; font-size: 15px; }
+    padding: 7px 12px; border-radius: 999px; font-size: 15px; }
   .who button.on { background: #fff; color: var(--brand); }
 
   nav.days { display: flex; gap: 6px; padding: 10px 12px 2px; overflow-x: auto; scrollbar-width: none; }
@@ -59,6 +59,10 @@
   .oil { font-size: 14px; color: var(--muted); text-align: center; margin: 4px 0 12px; }
   .legend { font-size: 12px; color: var(--muted); text-align: center; }
   .legend i { display: inline-block; width: 14px; height: 10px; background: var(--hl); border: 1px solid var(--hl-line); border-radius: 2px; vertical-align: -1px; }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .two .col h3 { margin: 0 0 4px; font-size: 13px; color: var(--ink); background: var(--brand-2); border-radius: 7px; padding: 4px 8px; }
+  .two li { display: block; font-size: 14.5px; padding: 6px 0; }
+  .two li .q { display: block; font-size: 13px; }
   details.rules { background: var(--card); border-radius: var(--radius); padding: 10px 14px; margin-top: 8px; font-size: 14px; color: #3b3934; }
   details.rules summary { font-weight: 700; color: var(--brand); cursor: pointer; }
   details.rules li { display: list-item; font-size: 14px; border: 0; padding: 3px 0; margin-left: 18px; }
@@ -68,8 +72,9 @@
 <body>
 <header>
   <div class="top">
-    <h1>La mia dieta</h1>
+    <h1>Dieta</h1>
     <div class="who" role="tablist">
+      <button data-p="I">Insieme</button>
       <button data-p="D">Diana</button>
       <button data-p="E">Enzo</button>
     </div>
@@ -148,6 +153,17 @@ const RULES = [
 
 const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 
+function twoCols(d, e, fn) {
+  return `<div class="two"><div class="col"><h3>Diana</h3>${fn(d)}</div><div class="col"><h3>Enzo</h3>${fn(e)}</div></div>`;
+}
+function block(title, d, e, fn, tip) {
+  const body = person === "I" ? twoCols(d, e, fn) : fn(person === "D" ? d : e);
+  return `<div class="meal"><h2>${title}</h2>${body}${tip ? `<div class="tip"><b>Insieme:</b> ${esc(tip)}</div>` : ""}</div>`;
+}
+function oilLine() {
+  return person === "I" ? `Olio di oliva nella giornata: Diana <b>${OIL.D}</b> · Enzo <b>${OIL.E}</b>`
+                        : `Olio di oliva nella giornata: <b>${OIL[person]}</b>`;
+}
 function simpleList(items) {
   return "<ul>" + items.map(([n,q]) => `<li><span class="n">${esc(n)}</span><span class="q">${esc(q)}</span></li>`).join("") + "</ul>";
 }
@@ -158,7 +174,8 @@ function mealList(items) {
 }
 
 const todayIdx = (new Date().getDay() + 6) % 7;
-let person = (() => { try { return localStorage.getItem("person") || "D"; } catch { return "D"; } })();
+// All'apertura si parte sempre dalla vista "Insieme"
+let person = "I";
 let current = todayIdx;
 
 const pager = document.getElementById("pager");
@@ -171,11 +188,11 @@ function render() {
   pager.innerHTML = WEEK.map((d,i) => `
     <section class="day" aria-label="${DAYS[i]}">
       <div class="dayname">${DAYS[i]}${i===todayIdx ? "<small>oggi</small>" : ""}</div>
-      <div class="meal"><h2>Colazione</h2>${simpleList(BREAKFAST[person])}</div>
-      <div class="meal"><h2>Spuntino</h2>${simpleList(SNACK)}</div>
-      <div class="meal"><h2>Pranzo</h2>${mealList(d.L[person])}<div class="tip"><b>Insieme:</b> ${esc(d.L.tip)}</div></div>
-      <div class="meal"><h2>Cena</h2>${mealList(d.C[person])}<div class="tip"><b>Insieme:</b> ${esc(d.C.tip)}</div></div>
-      <div class="oil">Olio di oliva nella giornata: <b>${OIL[person]}</b></div>
+      ${block("Colazione", BREAKFAST.D, BREAKFAST.E, simpleList)}
+      <div class="meal"><h2>Spuntino</h2>${simpleList(SNACK)}${person === "I" ? '<div class="tip">Uguale per tutti e due.</div>' : ""}</div>
+      ${block("Pranzo", d.L.D, d.L.E, mealList, d.L.tip)}
+      ${block("Cena", d.C.D, d.C.E, mealList, d.C.tip)}
+      <div class="oil">${oilLine()}</div>
       <div class="legend"><i></i> si cucina insieme per tutti e due</div>
       <details class="rules"><summary>Consigli della nutrizionista</summary><ul>${RULES.map(r=>`<li>${esc(r)}</li>`).join("")}</ul></details>
     </section>`).join("");
@@ -204,7 +221,6 @@ pager.addEventListener("scroll", () => {
 nav.addEventListener("click", e => { const b = e.target.closest("button"); if (b) goTo(+b.dataset.i); });
 document.querySelectorAll(".who button").forEach(b => b.addEventListener("click", () => {
   person = b.dataset.p;
-  try { localStorage.setItem("person", person); } catch {}
   const y = pager.children[current]?.scrollTop || 0;
   render();
   if (pager.children[current]) pager.children[current].scrollTop = y;
